@@ -1,0 +1,55 @@
+import pandas as pd
+messages = pd.read_csv('spam.csv')
+#print(messages.head())
+messages.drop(['Unnamed: 2','Unnamed: 3','Unnamed: 4'],axis=1,inplace=True)
+#messages.head()
+messages.rename(columns = {'v1' : 'Label' , 'v2' : 'Messages'},inplace=True)
+messages.head()
+
+import matplotlib.pyplot as plt
+%matplotlib inline
+
+messages["Label"].value_counts().plot(kind = 'pie', explode = [0, 0.1], figsize = (6, 6), autopct = '%1.1f%%', shadow = True)
+plt.ylabel("Spam vs Ham")
+plt.legend(["Ham", "Spam"])
+plt.show()
+
+#for data cleaning
+import re
+import nltk
+nltk.download('stopwords')
+
+from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+ps = PorterStemmer()
+corpus = []
+
+for i in range(0,len(messages)):
+    review = re.sub('[a-z,A-Z]',' ',messages['Messages'][i])
+    review = review.lower()
+    review = review.split()
+    review = [ps.stem('word') for word in review if word not in set(stopwords.words('english') )]
+    review = ' '.join(review)
+    corpus.append(review)
+    
+#creating BOW
+from sklearn.feature_extraction.text import CountVectorizer
+cv = CountVectorizer(max_features = 5000)
+x = cv.fit_transform(corpus).toarray()
+y = pd.get_dummies(messages['Label'])
+y = y.iloc[:,1].values
+
+#splitting
+from sklearn.model_selection import train_test_split
+X_train,X_test,y_train,y_test = train_test_split(x,y,test_size = 0.2,random_state=0)
+
+#model
+from sklearn.naive_bayes import MultinomialNB 
+spam_detect = MultinomialNB().fit(X_train,y_train)
+y_pred = spam_detect.predict(X_test)
+
+#confusion matrix
+from sklearn.metrics import confusion_matrix,accuracy_score
+cm = confusion_matrix(y_test,y_pred)
+print(cm)
+accuracy_score(y_test,y_pred)
