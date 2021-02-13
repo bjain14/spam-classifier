@@ -53,3 +53,8 @@ from sklearn.metrics import confusion_matrix,accuracy_score
 cm = confusion_matrix(y_test,y_pred)
 print(cm)
 accuracy_score(y_test,y_pred)
+
+#OUTPUT
+[[949   0]
+ [166   0]]
+0.8511210762331839
